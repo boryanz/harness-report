@@ -1,9 +1,9 @@
 import {createServer} from 'node:http'
+import {loadSessions} from './adapters/copilot/loadSessions.ts'
 
-const sessions = ["Fix login crash", "Add journey data module", "Review PR", "Add something else"]
-
-const server = createServer((request, response) => {
+const server = createServer(async (request, response) => {
     if(request.url === '/api/sessions') {
+        const sessions = await loadSessions()
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(sessions))
         return
