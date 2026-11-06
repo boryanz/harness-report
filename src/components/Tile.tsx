@@ -1,29 +1,16 @@
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
-
-const TONES = {
-  neutral: '',
-  high: 'text-destructive',
-  medium: 'text-amber-600 dark:text-amber-400',
-}
-
 type TileProps = {
   label: string
   value: string | number
   caption: string
-  tone?: keyof typeof TONES
-  className?: string
 }
 
-function Tile({ label, value, caption, tone = 'neutral', className }: TileProps) {
+function Tile({ label, value, caption }: TileProps) {
   return (
-    <Card size="sm" className={className}>
-      <CardHeader>
-        <CardDescription className="text-xs font-medium uppercase tracking-wide">{label}</CardDescription>
-        <div className={cn('text-3xl font-semibold tabular-nums', TONES[tone])}>{value}</div>
-      </CardHeader>
-      <CardContent className="text-xs text-muted-foreground">{caption}</CardContent>
-    </Card>
+    <div className="min-w-0">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-0.5 truncate text-xs text-muted-foreground">{caption}</div>
+    </div>
   )
 }
 

@@ -1,7 +1,10 @@
 import {useEffect, useState} from 'react'
 import type {SessionSummary} from '../shared/types.ts'
+import { Activity } from 'lucide-react'
+import { formatDay } from '@/lib/format'
+import { groupByDay } from '@/lib/sessions'
+import Overview from './components/Overview.tsx'
 import SessionRow from './components/SessionRow.tsx'
-import Tile from './components/Tile.tsx'
 
 function App() {
   console.log('App rendered')
@@ -19,26 +22,42 @@ function App() {
     loadSessions()
   }, [])
 
+  const month = new Date().toLocaleDateString([], { month: 'long', year: 'numeric' })
+
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Harness report</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{sessions.length} sessions</p>
+    <>
+      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-2.5 px-4 sm:px-6">
+          <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Activity className="size-4" />
+          </span>
+          <h1 className="text-sm font-semibold tracking-tight">harness-report</h1>
+          <span className="ml-auto text-sm text-muted-foreground">{month}</span>
+        </div>
+      </header>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <Tile label="Sessions" value={sessions.length} caption="in session-state" />
-        <Tile label="High findings" value="—" caption="coming in Slice 3" tone="high" />
-        <Tile label="Medium findings" value="—" caption="coming in Slice 3" tone="medium" />
-        <Tile label="Implementation time" value="—" caption="coming in December" />
-        <Tile label="AI credits" value="—" caption="coming in Slice 2" className="sm:col-span-2" />
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+        <Overview sessions={sessions} />
 
-      <h2 className="mt-8 mb-3 text-lg font-semibold">Sessions</h2>
-      <div className="flex flex-col gap-2">
-        {sessions.map((session) => (
-          <SessionRow key={session.id} session={session} />
-        ))}
-      </div>
-    </main>
+        <div className="mt-8 flex flex-col gap-6">
+          {groupByDay(sessions).map((day) => (
+            <section key={day.date.toDateString()}>
+              <div className="mb-2 flex items-baseline justify-between px-1">
+                <h2 className="text-sm font-semibold tracking-tight">{formatDay(day.date)}</h2>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {day.sessions.length} {day.sessions.length === 1 ? 'session' : 'sessions'}
+                </span>
+              </div>
+              <div className="divide-y overflow-hidden rounded-xl border bg-card shadow-xs">
+                {day.sessions.map((session) => (
+                  <SessionRow key={session.id} session={session} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
+    </>
   )
 }
 
