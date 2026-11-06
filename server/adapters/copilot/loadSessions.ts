@@ -2,8 +2,9 @@ import {existsSync} from 'node:fs'
 import {readdir, readFile} from 'node:fs/promises'
 import {join} from 'node:path'
 import {homedir} from 'node:os'
-import type {Finding, SessionDetail, SessionSummary} from '../../../shared/types.ts'
+import type {CreditUsage, Finding, SessionDetail, SessionSummary} from '../../../shared/types.ts'
 import {runChecks, sessionStatus} from '../../checks/index.ts'
+import {loadConfig} from '../../config.ts'
 import {parseActivity} from './activity.ts'
 import {parseAgents} from './agents.ts'
 import {parseCredits} from './credits.ts'
@@ -34,7 +35,6 @@ async function readSession(id: string): Promise<SessionSummary  | null> {
     if(!events.some((event) => event.type === 'user.message')) return null
     const times = events.map((event) => Date.parse(event.timestamp))
     const agents = parseAgents(events)
-    const {waiting} = parseActivity(events, agents)
     const end = new Date(Math.max(...times)).toISOString()
 
     const workspacePath = join(folder, 'workspace.yaml')
@@ -49,8 +49,7 @@ async function readSession(id: string): Promise<SessionSummary  | null> {
         start: new Date(Math.min(...times)).toISOString(),
         end,
         status: sessionStatus(findings),
-        ...parseCredits(events, monthStart()),
-        waitingMs: waiting.reduce((total, span) => total + Date.parse(span.end) - Date.parse(span.start), 0)
+        ...parseCredits(events, monthStart())
     }
 }
 
@@ -89,6 +88,35 @@ export async function loadFindings(): Promise<Finding[]> {
         }
     }))
     return runChecks(checkSessions)
+}
+
+// Each eval suite is its own Copilot home: <evals>/<suite>/session-state/<id>/events.jsonl
+async function evalEventFiles(root: string): Promise<string[]> {
+    if (!existsSync(root)) return []
+
+    const suites = await readdir(root, {withFileTypes: true})
+    const folders = await Promise.all(suites.filter((suite) => suite.isDirectory()).map(async (suite) => {
+        const sessionState = join(root, suite.name, 'session-state')
+        if (!existsSync(sessionState)) return []
+        const ids = await readdir(sessionState)
+        return ids.map((id) => join(sessionState, id, 'events.jsonl'))
+    }))
+    return folders.flat().filter((path) => existsSync(path))
+}
+
+// Eval runs aren't listed as sessions, but they spend from the same allowance.
+export async function loadCreditUsage(): Promise<CreditUsage> {
+    const config = await loadConfig()
+    const sessions = await loadSessions()
+    const evalFiles = config.evalSessions ? await evalEventFiles(config.evalSessions) : []
+    const evals = await Promise.all(evalFiles.map(async (path) => parseCredits(await readEvents(path), monthStart())))
+    const spend = [...sessions, ...evals]
+
+    return {
+        allowance: config.monthlyCredits,
+        used: spend.reduce((total, item) => total + item.monthCredits, 0),
+        premiumRequests: spend.reduce((total, item) => total + item.monthPremiumRequests, 0)
+    }
 }
 
 function monthStart(): number {

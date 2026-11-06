@@ -5,20 +5,37 @@ import type {ToolRecord} from '../../model.ts'
 
 type ToolDescription = {kind: ToolKind; title: string; detail: string | null}
 
+// The argument that says what a call worked on, in the order to look for it
+const TARGET_ARGS = ['path', 'pattern', 'command', 'url', 'query', 'text', 'key', 'issue_key']
+
+// apply_patch sends its patch as one string, and each file it touches has a header line
+function patchedFiles(patch: string): string | null {
+    const files = [...patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map((match) => match[1])
+    return files.join(', ') || null
+}
+
+function toolTarget(args: unknown): string | null {
+    if (typeof args === 'string') return patchedFiles(args)
+
+    const values = (args ?? {}) as Record<string, unknown>
+    const key = TARGET_ARGS.find((name) => typeof values[name] === 'string')
+    return key ? (values[key] as string) : null
+}
+
 function describeTool(data: RawEvent['data']): ToolDescription {
     const name = data.toolName as string
     const args = (data.arguments ?? {}) as Record<string, unknown>
     const description = (args.description as string | undefined) ?? null
 
     if (data.mcpServerName) {
-        return {kind: 'mcp', title: `${data.mcpServerName}.${data.mcpToolName}`, detail: null}
+        return {kind: 'mcp', title: `${data.mcpServerName}.${data.mcpToolName}`, detail: toolTarget(args)}
     }
     if (name === 'task') {
         return {kind: 'subagent', title: (args.name ?? args.agent_type ?? name) as string, detail: description}
     }
     if (name === 'skill') return {kind: 'skill', title: (args.skill ?? name) as string, detail: null}
     if (name === 'ask_user') return {kind: 'ask', title: name, detail: null}
-    return {kind: 'tool', title: name, detail: description}
+    return {kind: 'tool', title: name, detail: description ?? toolTarget(args)}
 }
 
 const MAX_ERROR_LENGTH = 300
@@ -104,7 +121,7 @@ export function parseToolRecords(events: RawEvent[]): ToolRecord[] {
                     rejected: wasRejected(result),
                     error,
                     hint: error ? errorHint([error]) || null : null,
-                    raw: success === true ? null : {
+                    raw: {
                         arguments: rawJson(start.data.arguments ?? {}),
                         result: result ? rawJson(result) : null
                     }

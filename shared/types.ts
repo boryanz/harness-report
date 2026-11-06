@@ -1,3 +1,9 @@
+export type CreditUsage = {
+    allowance: number
+    used: number
+    premiumRequests: number
+}
+
 export type SessionStatus = 'stuck' | 'degraded' | 'healthy'
 
 export type SessionSummary = {
@@ -8,7 +14,7 @@ export type SessionSummary = {
     end: string
     credits: number
     monthCredits: number
-    waitingMs: number
+    monthPremiumRequests: number
     status: SessionStatus
 }
 
@@ -21,7 +27,6 @@ export type AgentRun = {
     mode: string
     start: string
     durationMs: number
-    toolCalls: number
     tokens: number
     credits: number
 }
@@ -56,7 +61,7 @@ export type ToolCall = {
     rejected: boolean
     error: string | null
     hint: string | null
-    raw: RawToolCall | null
+    raw: RawToolCall
 }
 
 export type Severity = 'high' | 'medium' | 'low'
