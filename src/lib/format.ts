@@ -1,8 +1,17 @@
 export function formatDuration(ms: number): string {
-  const minutes = Math.round(ms / 60000)
-  if (ms < 60000) return `${Math.round(ms / 1000)}s`
+  if (ms < 1000) return '<1s'
+
+  const seconds = Math.round(ms / 1000)
+  if (seconds < 60) return `${seconds}s`
+  if (seconds < 600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+
+  const minutes = Math.round(seconds / 60)
   if (minutes < 60) return `${minutes}m`
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+}
+
+export function formatCredits(credits: number): string {
+  return credits > 0 ? credits.toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—'
 }
 
 export function formatTime(iso: string): string {

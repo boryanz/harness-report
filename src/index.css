@@ -79,7 +79,6 @@
     --agent-5: #e87ba4;
     --agent-6: #008300;
     --agent-7: #6250d6;
-    --agent-8: #e34948;
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
@@ -122,7 +121,6 @@
     --agent-5: #d55181;
     --agent-6: #008300;
     --agent-7: #9085e9;
-    --agent-8: #e66767;
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.488 0.243 264.376);

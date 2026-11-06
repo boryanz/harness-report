@@ -3,8 +3,11 @@ import {readdir, readFile} from 'node:fs/promises'
 import {join} from 'node:path'
 import {homedir} from 'node:os'
 import type {SessionDetail, SessionSummary} from '../../../shared/types.ts'
+import {parseActivity} from './activity.ts'
 import {parseAgents} from './agents.ts'
+import {parseCredits} from './credits.ts'
 import {readEvents} from './events.ts'
+import {parseToolCalls} from './tools.ts'
 
 const SESSIONS_ROOT = join(homedir(), '.copilot', 'session-state')
 
@@ -28,6 +31,7 @@ async function readSession(id: string): Promise<SessionSummary  | null> {
     const events = await readEvents(eventsPath)
     if(!events.some((event) => event.type === 'user.message')) return null
     const times = events.map((event) => Date.parse(event.timestamp))
+    const {waiting} = parseActivity(events, parseAgents(events))
 
     const workspacePath = join(folder, 'workspace.yaml')
     const text = existsSync(workspacePath) ? await readFile(workspacePath, 'utf-8') : ''
@@ -37,7 +41,9 @@ async function readSession(id: string): Promise<SessionSummary  | null> {
         name: meta['name'] || meta['summary'] || '',
         cwd: meta['cwd'] || '',
         start: new Date(Math.min(...times)).toISOString(),
-        end: new Date(Math.max(...times)).toISOString()
+        end: new Date(Math.max(...times)).toISOString(),
+        ...parseCredits(events, monthStart()),
+        waitingMs: waiting.reduce((total, span) => total + Date.parse(span.end) - Date.parse(span.start), 0)
     }
 }
 
@@ -54,8 +60,11 @@ export async function loadSessionDetail(id: string): Promise<SessionDetail | nul
     if (!existsSync(path)) return null
 
     const events = await readEvents(path)
+    const agents = parseAgents(events)
     return {
-        agents: parseAgents(events)
+        agents,
+        activity: parseActivity(events, agents),
+        toolCalls: parseToolCalls(events)
     }
 }
 

@@ -1,10 +1,12 @@
 import { ChevronRight } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatDuration, formatTimeRange } from '@/lib/format'
+import { formatCredits, formatDuration, formatTimeRange } from '@/lib/format'
 import { sessionDuration } from '@/lib/sessions'
 import {useEffect, useState} from 'react'
 import AgentsTable from './AgentsTable.tsx'
+import SessionTimeline from './SessionTimeline.tsx'
+import ToolCallsTable from './ToolCallsTable.tsx'
 import type { SessionDetail, SessionSummary } from '../../shared/types.ts'
 
 type SessionRowProps = {
@@ -38,6 +40,9 @@ function SessionRow({ session }: SessionRowProps) {
         <span className="w-14 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
           {formatDuration(sessionDuration(session))}
         </span>
+        <span className="hidden w-20 shrink-0 text-right text-xs text-muted-foreground tabular-nums sm:inline">
+          {formatCredits(session.credits)} cr
+        </span>
       </CollapsibleTrigger>
       <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down motion-reduce:animate-none">
         <div className="border-t bg-muted/30 px-4 py-4 sm:pl-11">
@@ -46,10 +51,16 @@ function SessionRow({ session }: SessionRowProps) {
             <dd className="font-mono break-all">{session.cwd || '—'}</dd>
             <dt className="text-muted-foreground">Session</dt>
             <dd className="font-mono break-all">{session.id}</dd>
+            <dt className="text-muted-foreground">AI credits</dt>
+            <dd className="tabular-nums">{formatCredits(session.credits)}</dd>
           </dl>
           <div className="mt-4">
             {detail ? (
-              <AgentsTable agents={detail.agents} session={session} />
+              <div className="flex flex-col gap-4">
+                <SessionTimeline session={session} agents={detail.agents} activity={detail.activity} />
+                <AgentsTable agents={detail.agents} />
+                <ToolCallsTable toolCalls={detail.toolCalls} agents={detail.agents} />
+              </div>
             ) : (
               <div className="flex flex-col gap-2">
                 <Skeleton className="h-4 w-2/3" />
