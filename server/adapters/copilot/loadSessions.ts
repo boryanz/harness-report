@@ -20,14 +20,14 @@ function parseWorkspace(text: string): Record<string, string> {
 
 async function readSession(id: string): Promise<SessionSummary  | null> {
     const folder = join(SESSIONS_ROOT, id)
-    if (!existsSync(join(folder, 'event.jsonl'))) return null
+    if (!existsSync(join(folder, 'events.jsonl'))) return null
 
     const workspacePath = join(folder, 'workspace.yaml')
     const text = existsSync(workspacePath) ? await readFile(workspacePath, 'utf-8') : ''
     const meta = parseWorkspace(text)
     return {
         id,
-        name: meta['name'] || meta['summary'],
+        name: meta['name'] || meta['summary'] || '',
         cwd: meta['cwd'] || ''
     }
 }
