@@ -1,18 +1,20 @@
 import type { CSSProperties } from 'react'
+import { Bot, ChartNoAxesGantt, Hourglass, Terminal, type LucideIcon } from 'lucide-react'
 import { agentColor } from '@/lib/agentColor'
 import { formatDuration, formatShortDate, formatTime } from '@/lib/format'
 import type { AgentRun, SessionActivity, SessionSummary, Span } from '../../shared/types.ts'
 
 const WAITING_STYLE: CSSProperties = {
-  background: 'repeating-linear-gradient(135deg, var(--muted-foreground) 0 2px, transparent 2px 5px)',
+  background: 'repeating-linear-gradient(135deg, var(--waiting) 0 2px, transparent 2px 5px)',
 }
-const MAIN_STYLE: CSSProperties = { backgroundColor: 'var(--foreground)', opacity: 0.75 }
+const MAIN_STYLE: CSSProperties = { backgroundColor: 'var(--main-lane)' }
 
 type Lane = {
   name: string
   spans: Span[]
   barStyle: CSSProperties
-  dotStyle: CSSProperties
+  icon: LucideIcon
+  iconColor: string
 }
 
 type SessionTimelineProps = {
@@ -35,18 +37,19 @@ function agentSpan(agent: AgentRun): Span {
 function buildLanes(agents: AgentRun[], activity: SessionActivity): Lane[] {
   const agentLabels = [...new Set(agents.map((agent) => agent.label))].sort()
   const agentLanes = agentLabels.map((label) => {
-    const color = { backgroundColor: agentColor(label) }
+    const color = agentColor(label)
     return {
       name: label,
       spans: agents.filter((agent) => agent.label === label).map(agentSpan),
-      barStyle: color,
-      dotStyle: color,
+      barStyle: { backgroundColor: color },
+      icon: Bot,
+      iconColor: color,
     }
   })
 
   const lanes = [
-    { name: 'Waiting for you', spans: activity.waiting, barStyle: WAITING_STYLE, dotStyle: { backgroundColor: 'var(--muted-foreground)' } },
-    { name: 'Main agent', spans: activity.main, barStyle: MAIN_STYLE, dotStyle: MAIN_STYLE },
+    { name: 'Waiting for you', spans: activity.waiting, barStyle: WAITING_STYLE, icon: Hourglass, iconColor: 'var(--waiting)' },
+    { name: 'Main agent', spans: activity.main, barStyle: MAIN_STYLE, icon: Terminal, iconColor: 'var(--main-lane)' },
     ...agentLanes,
   ]
   return lanes.filter((lane) => lane.spans.length > 0)
@@ -69,7 +72,10 @@ function SessionTimeline({ session, agents, activity }: SessionTimelineProps) {
   return (
     <figure>
       <figcaption className="mb-2 flex items-baseline justify-between gap-4 text-xs">
-        <span className="text-muted-foreground">Timeline</span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <ChartNoAxesGantt className="size-3.5" style={{ color: 'var(--agent-1)' }} aria-hidden />
+          Timeline
+        </span>
         {waitingMs > 0 && (
           <span className="text-muted-foreground tabular-nums">
             Waiting for you <span className="font-medium text-foreground">{formatDuration(waitingMs)}</span> of{' '}
@@ -82,7 +88,7 @@ function SessionTimeline({ session, agents, activity }: SessionTimelineProps) {
         {lanes.map((lane) => (
           <div key={lane.name} className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-3 text-xs">
             <div className="flex min-w-0 items-center gap-1.5">
-              <span className="size-1.5 shrink-0 rounded-full" style={lane.dotStyle} />
+              <lane.icon className="size-3.5 shrink-0" style={{ color: lane.iconColor }} aria-hidden />
               <span className="truncate">{lane.name}</span>
             </div>
             <div className="relative h-3 overflow-hidden rounded-sm bg-muted/70">

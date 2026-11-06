@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import type {SessionSummary} from '../shared/types.ts'
-import { Activity } from 'lucide-react'
+import { Activity, CalendarDays } from 'lucide-react'
 import { formatDay } from '@/lib/format'
 import { groupByDay } from '@/lib/sessions'
 import Overview from './components/Overview.tsx'
@@ -26,9 +26,9 @@ function App() {
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-2.5 px-4 sm:px-6">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+      <header className="sticky top-0 z-10 border-b bg-background">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2.5 px-4 sm:px-6">
+          <span className="flex size-7 items-center justify-center rounded-md bg-(--agent-1) text-white">
             <Activity className="size-4" />
           </span>
           <h1 className="text-sm font-semibold tracking-tight">harness-report</h1>
@@ -36,26 +36,36 @@ function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <Overview sessions={sessions} />
 
-        <div className="mt-8 flex flex-col gap-6">
+        <section className="mt-4 overflow-hidden rounded-lg border bg-card">
+          <header className="flex items-baseline justify-between gap-4 px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold tracking-tight">Sessions</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Open a session for its timeline, agents and event log.</p>
+            </div>
+            <span className="shrink-0 font-mono text-xs text-muted-foreground">{sessions.length} this month</span>
+          </header>
           {groupByDay(sessions).map((day) => (
-            <section key={day.date.toDateString()}>
-              <div className="mb-2 flex items-baseline justify-between px-1">
-                <h2 className="text-sm font-semibold tracking-tight">{formatDay(day.date)}</h2>
-                <span className="text-xs text-muted-foreground tabular-nums">
+            <div key={day.date.toDateString()}>
+              <div className="flex items-center justify-between border-y bg-muted/50 px-5 py-1.5 text-xs">
+                <h3 className="flex items-center gap-1.5 font-medium">
+                  <CalendarDays className="size-3.5" style={{ color: 'var(--agent-1)' }} aria-hidden />
+                  {formatDay(day.date)}
+                </h3>
+                <span className="font-mono text-muted-foreground">
                   {day.sessions.length} {day.sessions.length === 1 ? 'session' : 'sessions'}
                 </span>
               </div>
-              <div className="divide-y overflow-hidden rounded-xl border bg-card shadow-xs">
+              <div className="divide-y">
                 {day.sessions.map((session) => (
                   <SessionRow key={session.id} session={session} />
                 ))}
               </div>
-            </section>
+            </div>
           ))}
-        </div>
+        </section>
       </main>
     </>
   )

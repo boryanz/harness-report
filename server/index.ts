@@ -1,5 +1,5 @@
 import {createServer} from 'node:http'
-import {loadSessionDetail,loadSessions} from './adapters/copilot/loadSessions.ts'
+import {loadFindings,loadSessionDetail,loadSessions} from './adapters/copilot/loadSessions.ts'
 
 
 const server = createServer(async (request, response) => {
@@ -7,6 +7,19 @@ const server = createServer(async (request, response) => {
         const sessions = await loadSessions()
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(sessions))
+        return
+    }
+
+    if(request.url === '/api/findings') {
+        try {
+            const findings = await loadFindings()
+            response.writeHead(200, {'Content-Type': 'application/json'})
+            response.end(JSON.stringify(findings))
+        } catch (error) {
+            console.error(error)
+            response.writeHead(500, {'Content-Type': 'text/plain'})
+            response.end()
+        }
         return
     }
 

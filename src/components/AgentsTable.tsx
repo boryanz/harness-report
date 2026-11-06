@@ -1,3 +1,4 @@
+import { Bot } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { agentColor } from '@/lib/agentColor'
 import { formatCredits, formatDuration } from '@/lib/format'
@@ -12,10 +13,10 @@ function AgentBadge({ name }: { name: string }) {
   const color = agentColor(name)
   return (
     <Badge
-      className="gap-1.5 text-foreground"
+      className="gap-1.5 rounded-sm text-foreground"
       style={{ backgroundColor: `color-mix(in oklab, ${color} 16%, transparent)` }}
     >
-      <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <Bot className="size-3" style={{ color }} aria-hidden />
       {name}
     </Badge>
   )

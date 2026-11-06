@@ -1,3 +1,5 @@
+export type SessionStatus = 'stuck' | 'degraded' | 'healthy'
+
 export type SessionSummary = {
     id: string
     name: string
@@ -7,6 +9,7 @@ export type SessionSummary = {
     credits: number
     monthCredits: number
     waitingMs: number
+    status: SessionStatus
 }
 
 export type AgentRun = {
@@ -33,18 +36,54 @@ export type SessionActivity = {
     waiting: Span[]
 }
 
+export type ToolKind = 'tool' | 'mcp' | 'skill' | 'subagent' | 'ask'
+
+export type RawToolCall = {
+    arguments: string
+    result: string | null
+}
+
 export type ToolCall = {
     id: string
     name: string
+    kind: ToolKind
+    title: string
+    detail: string | null
     agentId: string | null
     start: string
     durationMs: number | null
     success: boolean | null
+    rejected: boolean
     error: string | null
+    hint: string | null
+    raw: RawToolCall | null
+}
+
+export type Severity = 'high' | 'medium' | 'low'
+
+export type FindingKind = 'stuck-loop' | 'hung-call' | 'identical-call' | 'tool-failure'
+
+export type Finding = {
+    id: string
+    kind: FindingKind
+    severity: Severity
+    title: string
+    detail: string
+    agent: string
+    time: string
+    sessionId: string
+    sessionName: string
+}
+
+export type Prompt = {
+    id: string
+    text: string
+    time: string
 }
 
 export type SessionDetail = {
     agents: AgentRun[]
     activity: SessionActivity
     toolCalls: ToolCall[]
+    prompts: Prompt[]
 }

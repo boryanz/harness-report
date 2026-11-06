@@ -10,6 +10,20 @@ export function formatDuration(ms: number): string {
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
+// Time since the session started, like +1m 19s
+export function formatOffset(ms: number): string {
+  const seconds = Math.floor(ms / 1000)
+  if (seconds < 60) return `+${seconds}s`
+  if (seconds < 3600) return `+${Math.floor(seconds / 60)}m ${seconds % 60}s`
+  return `+${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+}
+
+export function formatCallTime(ms: number): string {
+  if (ms < 1000) return `${ms}ms`
+  if (ms < 10000) return `${(ms / 1000).toFixed(1)}s`
+  return formatDuration(ms)
+}
+
 export function formatCredits(credits: number): string {
   return credits > 0 ? credits.toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—'
 }
