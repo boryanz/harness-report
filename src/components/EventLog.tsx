@@ -2,9 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { Bot, ChevronRight, ListTree, MessageCircleQuestion, Plug, Sparkles, User, Wrench, type LucideIcon } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { formatCallTime, formatOffset } from '@/lib/format'
+import { toolStatus, type CallStatus } from '@/lib/sessions'
 import type { AgentRun, Prompt, RawToolCall, SessionSummary, ToolCall, ToolKind } from '../../shared/types.ts'
-
-type Status = 'ok' | 'failed' | 'unfinished'
 
 type Entry = {
   id: string
@@ -13,7 +12,7 @@ type Entry = {
   detail: string | null
   time: string
   durationMs: number | null
-  status: Status
+  status: CallStatus
   caller: string | null
   hint: string | null
   raw: RawToolCall | null
@@ -44,7 +43,7 @@ const KIND_LABELS: Partial<Record<Entry['kind'], string>> = {
   ask: 'asked you',
 }
 
-const STATUS_TEXT: Record<Status, string> = {
+const STATUS_TEXT: Record<CallStatus, string> = {
   ok: '',
   failed: 'text-destructive',
   unfinished: 'text-amber-600 dark:text-amber-400',
@@ -55,12 +54,6 @@ type EventLogProps = {
   toolCalls: ToolCall[]
   prompts: Prompt[]
   agents: AgentRun[]
-}
-
-function toolStatus(call: ToolCall): Status {
-  if (call.rejected) return 'ok'
-  if (call.success === null) return 'unfinished'
-  return call.success ? 'ok' : 'failed'
 }
 
 function buildEntries(toolCalls: ToolCall[], prompts: Prompt[], agents: AgentRun[]): Entry[] {
@@ -210,6 +203,15 @@ function EventList({ entries, sessionStart, scroll = false }: { entries: Entry[]
       ))}
     </ul>
   )
+}
+
+// One agent's calls. No caller on the rows, because they all come from the same agent.
+export function AgentEventList({ toolCalls, sessionStart }: { toolCalls: ToolCall[]; sessionStart: number }) {
+  if (toolCalls.length === 0) {
+    return <p className="text-xs text-muted-foreground">No tool calls logged for this agent.</p>
+  }
+
+  return <EventList entries={buildEntries(toolCalls, [], [])} sessionStart={sessionStart} scroll />
 }
 
 function EventLog({ session, toolCalls, prompts, agents }: EventLogProps) {

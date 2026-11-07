@@ -31,7 +31,6 @@ export function parseAgents(events: RawEvent[]): AgentRun[] {
                 mode: event.data.executionMode as string,
                 start: event.timestamp,
                 durationMs: 0,
-                toolCalls: 0,
                 tokens: 0,
                 credits: 0
             })
@@ -41,7 +40,6 @@ export function parseAgents(events: RawEvent[]): AgentRun[] {
             const run = runs.get(event.agentId)
             if(run) {
                 run.durationMs = event.data.durationMs as number
-                run.toolCalls = event.data.totalToolCalls as number
                 run.tokens = event.data.totalTokens as number
             }
         }

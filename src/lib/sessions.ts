@@ -1,4 +1,4 @@
-import type { SessionSummary } from '../../shared/types.ts'
+import type { SessionSummary, ToolCall } from '../../shared/types.ts'
 
 export type SessionDay = {
   date: Date
@@ -35,4 +35,12 @@ export function dailyCounts(sessions: SessionSummary[]) {
     const count = sessions.filter((session) => new Date(session.end).toDateString() === date.toDateString()).length
     return { day: index + 1, sessions: count, date }
   })
+}
+
+export type CallStatus = 'ok' | 'failed' | 'unfinished'
+
+export function toolStatus(call: ToolCall): CallStatus {
+  if (call.rejected) return 'ok'
+  if (call.success === null) return 'unfinished'
+  return call.success ? 'ok' : 'failed'
 }

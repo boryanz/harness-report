@@ -72,7 +72,7 @@ function SessionRow({ session }: SessionRowProps) {
             {detail ? (
               <div className="flex flex-col gap-4">
                 <SessionTimeline session={session} agents={detail.agents} activity={detail.activity} />
-                <AgentsTable agents={detail.agents} />
+                <AgentsTable session={session} agents={detail.agents} toolCalls={detail.toolCalls} />
                 <EventLog session={session} toolCalls={detail.toolCalls} prompts={detail.prompts} agents={detail.agents} />
               </div>
             ) : (
