@@ -1,0 +1,46 @@
+{
+  "schema": 2,
+  "suite": "20260116-140000-sample-reviewer",
+  "subject": {
+    "kind": "agent",
+    "name": "sample-reviewer",
+    "version": "v3"
+  },
+  "started": "2026-01-16T14:00:00Z",
+  "finished": "2026-01-16T14:02:00Z",
+  "complete": true,
+  "metrics": [
+    {
+      "id": "found",
+      "label": "Planted bugs found",
+      "unit": "count",
+      "better": "higher"
+    },
+    {
+      "id": "false_alarms",
+      "label": "False alarms",
+      "unit": "count",
+      "better": "lower"
+    }
+  ],
+  "runs": [
+    {
+      "case": "off-by-one",
+      "status": "ok",
+      "metrics": {
+        "found": 2,
+        "false_alarms": 0
+      },
+      "credits": 3.2
+    },
+    {
+      "case": "null-check",
+      "status": "ok",
+      "metrics": {
+        "found": 1,
+        "false_alarms": 1
+      },
+      "credits": 2.8
+    }
+  ]
+}

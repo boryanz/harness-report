@@ -1,0 +1,51 @@
+{
+  "schema": 2,
+  "suite": "20260117-110000-sample-readability",
+  "subject": {
+    "kind": "skill",
+    "name": "sample-readability",
+    "version": "e5f6a7b8"
+  },
+  "started": "2026-01-17T11:00:00Z",
+  "finished": null,
+  "complete": false,
+  "metrics": [
+    {
+      "id": "kept",
+      "label": "Behaviour kept",
+      "unit": "percent",
+      "better": "higher"
+    },
+    {
+      "id": "fixed",
+      "label": "Seeded issues fixed",
+      "unit": "percent",
+      "better": "higher",
+      "noisy": true
+    },
+    {
+      "id": "over",
+      "label": "Over-refactored clean code",
+      "unit": "percent",
+      "better": "lower"
+    }
+  ],
+  "arms": [
+    "with-skill",
+    "baseline"
+  ],
+  "baseline_arm": "baseline",
+  "runs": [
+    {
+      "case": "rename-unclear-locals",
+      "type": "seeded",
+      "arm": "with-skill",
+      "rep": 1,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.7
+      }
+    }
+  ]
+}

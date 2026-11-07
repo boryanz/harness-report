@@ -1,5 +1,7 @@
 import {createServer} from 'node:http'
 import {loadCreditUsage,loadFindings,loadSessionDetail,loadSessions} from './adapters/copilot/loadSessions.ts'
+import {loadConfig} from './config.ts'
+import {loadEvals} from './evals/loadEvals.ts'
 
 
 const server = createServer(async (request, response) => {
@@ -15,6 +17,20 @@ const server = createServer(async (request, response) => {
             const usage = await loadCreditUsage()
             response.writeHead(200, {'Content-Type': 'application/json'})
             response.end(JSON.stringify(usage))
+        } catch (error) {
+            console.error(error)
+            response.writeHead(500, {'Content-Type': 'text/plain'})
+            response.end()
+        }
+        return
+    }
+
+    if(request.url === '/api/evals') {
+        try {
+            const config = await loadConfig()
+            const results = await loadEvals(config.evalResults)
+            response.writeHead(200, {'Content-Type': 'application/json'})
+            response.end(JSON.stringify(results))
         } catch (error) {
             console.error(error)
             response.writeHead(500, {'Content-Type': 'text/plain'})

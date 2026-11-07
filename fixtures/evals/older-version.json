@@ -1,0 +1,195 @@
+{
+  "schema": 2,
+  "suite": "20260110-090000-sample-readability",
+  "subject": {
+    "kind": "skill",
+    "name": "sample-readability",
+    "version": "0ld3r000"
+  },
+  "started": "2026-01-10T09:00:00Z",
+  "finished": "2026-01-10T09:05:00Z",
+  "complete": true,
+  "metrics": [
+    {
+      "id": "kept",
+      "label": "Behaviour kept",
+      "unit": "percent",
+      "better": "higher"
+    },
+    {
+      "id": "fixed",
+      "label": "Seeded issues fixed",
+      "unit": "percent",
+      "better": "higher",
+      "noisy": true
+    },
+    {
+      "id": "over",
+      "label": "Over-refactored clean code",
+      "unit": "percent",
+      "better": "lower"
+    }
+  ],
+  "arms": [
+    "with-skill",
+    "baseline"
+  ],
+  "baseline_arm": "baseline",
+  "labels": {
+    "agent model": "sample-model",
+    "judge model": "sample-judge"
+  },
+  "runs": [
+    {
+      "case": "rename-unclear-locals",
+      "type": "seeded",
+      "arm": "with-skill",
+      "rep": 1,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.65
+      },
+      "credits": 4.3,
+      "duration_s": 9
+    },
+    {
+      "case": "flatten-nested-checks",
+      "type": "seeded",
+      "arm": "with-skill",
+      "rep": 1,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.55
+      },
+      "credits": 4.6,
+      "duration_s": 10
+    },
+    {
+      "case": "keep-short-helpers",
+      "type": "clean",
+      "arm": "with-skill",
+      "rep": 1,
+      "status": "invalid",
+      "metrics": {},
+      "credits": 4.9,
+      "duration_s": 11,
+      "reason": "skill did not load"
+    },
+    {
+      "case": "rename-unclear-locals",
+      "type": "seeded",
+      "arm": "with-skill",
+      "rep": 2,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.45
+      },
+      "credits": 5.2,
+      "duration_s": 12
+    },
+    {
+      "case": "flatten-nested-checks",
+      "type": "seeded",
+      "arm": "with-skill",
+      "rep": 2,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.55
+      },
+      "credits": 5.5,
+      "duration_s": 13
+    },
+    {
+      "case": "keep-short-helpers",
+      "type": "clean",
+      "arm": "with-skill",
+      "rep": 2,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "over": 0
+      },
+      "credits": 5.8,
+      "duration_s": 14
+    },
+    {
+      "case": "rename-unclear-locals",
+      "type": "seeded",
+      "arm": "baseline",
+      "rep": 1,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.5
+      },
+      "credits": 6.1,
+      "duration_s": 15
+    },
+    {
+      "case": "flatten-nested-checks",
+      "type": "seeded",
+      "arm": "baseline",
+      "rep": 1,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.4
+      },
+      "credits": 6.4,
+      "duration_s": 16
+    },
+    {
+      "case": "keep-short-helpers",
+      "type": "clean",
+      "arm": "baseline",
+      "rep": 1,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "over": 0
+      },
+      "credits": 6.7,
+      "duration_s": 17
+    },
+    {
+      "case": "rename-unclear-locals",
+      "type": "seeded",
+      "arm": "baseline",
+      "rep": 2,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.6
+      },
+      "credits": 7.0,
+      "duration_s": 18
+    },
+    {
+      "case": "flatten-nested-checks",
+      "type": "seeded",
+      "arm": "baseline",
+      "rep": 2,
+      "status": "ok",
+      "metrics": {
+        "kept": 1,
+        "fixed": 0.3
+      },
+      "credits": 7.3,
+      "duration_s": 19
+    },
+    {
+      "case": "keep-short-helpers",
+      "type": "clean",
+      "arm": "baseline",
+      "rep": 2,
+      "status": "error",
+      "reason": "timed out",
+      "metrics": {},
+      "duration_s": 600
+    }
+  ]
+}

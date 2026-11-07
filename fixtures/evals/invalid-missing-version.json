@@ -1,0 +1,27 @@
+{
+  "schema": 2,
+  "suite": "20260118-080000-broken",
+  "subject": {
+    "kind": "skill",
+    "name": "broken"
+  },
+  "started": "2026-01-18T08:00:00Z",
+  "complete": true,
+  "metrics": [
+    {
+      "id": "passed",
+      "label": "Tests passed",
+      "unit": "percent",
+      "better": "higher"
+    }
+  ],
+  "runs": [
+    {
+      "case": "typo-in-metric",
+      "status": "ok",
+      "metrics": {
+        "pased": 1
+      }
+    }
+  ]
+}

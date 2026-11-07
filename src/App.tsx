@@ -1,14 +1,23 @@
 import {useEffect, useState} from 'react'
 import type {SessionSummary} from '../shared/types.ts'
-import { Activity, CalendarDays } from 'lucide-react'
+import { Activity, CalendarDays, FlaskConical, LayoutDashboard, type LucideIcon } from 'lucide-react'
 import { formatDay } from '@/lib/format'
 import { groupByDay } from '@/lib/sessions'
+import EvalsScreen from './components/evals/EvalsScreen.tsx'
 import Overview from './components/Overview.tsx'
 import SessionRow from './components/SessionRow.tsx'
+
+type View = 'overview' | 'evals'
+
+const VIEWS: { id: View; label: string; icon: LucideIcon; color: string }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'var(--agent-1)' },
+  { id: 'evals', label: 'Evals', icon: FlaskConical, color: 'var(--agent-7)' },
+]
 
 function App() {
   console.log('App rendered')
   const [sessions, setSessions] = useState<SessionSummary[]>([])
+  const [view, setView] = useState<View>('overview')
 
   useEffect(() => {
     console.log('Fetching sessions')
@@ -32,14 +41,30 @@ function App() {
             <Activity className="size-4" />
           </span>
           <h1 className="text-sm font-semibold tracking-tight">harness-report</h1>
-          <span className="ml-auto text-sm text-muted-foreground">{month}</span>
+          <nav className="ml-2 flex items-center gap-1" aria-label="Sections">
+            {VIEWS.map(({ id, label, icon: Icon, color }) => (
+              <button
+                key={id}
+                type="button"
+                aria-current={view === id ? 'page' : undefined}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground"
+                onClick={() => setView(id)}
+              >
+                <Icon className="size-3.5" style={{ color }} aria-hidden />
+                {label}
+              </button>
+            ))}
+          </nav>
+          <span className="ml-auto hidden text-sm text-muted-foreground sm:inline">{month}</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        <Overview sessions={sessions} />
+        {view === 'evals' && <EvalsScreen />}
+        {view === 'overview' && <Overview sessions={sessions} />}
 
-        <section className="mt-4 overflow-hidden rounded-lg border bg-card">
+        {/* Hidden, not removed, so open sessions stay open when you come back */}
+        <section hidden={view !== 'overview'} className="mt-4 overflow-hidden rounded-lg border bg-card">
           <header className="flex items-baseline justify-between gap-4 px-5 py-4">
             <div>
               <h2 className="text-sm font-semibold tracking-tight">Sessions</h2>

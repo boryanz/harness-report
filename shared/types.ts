@@ -92,3 +92,55 @@ export type SessionDetail = {
     toolCalls: ToolCall[]
     prompts: Prompt[]
 }
+
+export type EvalSubject = {
+    kind: 'skill' | 'agent'
+    name: string
+    version: string
+}
+
+export type EvalMetric = {
+    id: string
+    label: string
+    unit: 'percent' | 'count' | 'credits'
+    better: 'higher' | 'lower'
+    noisy?: boolean
+}
+
+export type EvalRun = {
+    case: string
+    status: 'ok' | 'invalid' | 'error'
+    metrics: Record<string, number | null>
+    type?: string
+    arm?: string
+    rep?: number
+    reason?: string
+    session_id?: string
+    credits?: number
+    duration_s?: number
+}
+
+// Field names match the JSON contract in docs/eval-contract.md
+export type EvalSuite = {
+    schema: 2
+    suite: string
+    subject: EvalSubject
+    started: string
+    finished?: string | null
+    complete: boolean
+    metrics: EvalMetric[]
+    arms?: string[]
+    baseline_arm?: string
+    labels?: Record<string, string>
+    runs: EvalRun[]
+}
+
+export type RejectedEvalFile = {
+    file: string
+    reason: string
+}
+
+export type EvalResults = {
+    suites: EvalSuite[]
+    rejected: RejectedEvalFile[]
+}
