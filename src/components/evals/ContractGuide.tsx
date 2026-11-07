@@ -21,9 +21,10 @@ const QUICK_START = `{
   ]
 }`
 
-const CONFIG = `[evals]
-results = "~/my-evals/results"
-# or a list: ["~/my-evals/results", "~/team-evals/results"]`
+const SETTINGS_FILE = `{
+  "monthly_credits": 30000,
+  "eval_results": ["~/my-evals/results", "~/team-evals/results"]
+}`
 
 const COMPARISON = `{
   "schema": 2,
@@ -213,7 +214,7 @@ function ContractGuide() {
           {[
             ['1', 'Run your tests', 'Any tool: a script, a Gradle task, pytest, a CI job.'],
             ['2', 'Write a result file', 'One JSON file per suite run, in the format below.'],
-            ['3', 'See it here', 'Add the folder to your config. Results scores the newest suite.'],
+            ['3', 'See it here', 'Add the folder in Settings. Results scores the newest suite.'],
           ].map(([step, title, text]) => (
             <li key={step} className="bg-card px-3 py-2.5">
               <div className="flex items-center gap-1.5 font-medium text-foreground">
@@ -239,10 +240,15 @@ function ContractGuide() {
         <p>The smallest valid file: one metric, one run, nothing compared.</p>
         <CodeBlock label="results/20260315-093000-my-skill.json" text={QUICK_START} />
         <p>
-          Then point the app at the folder in {code('~/.config/harness-report/config.toml')}. Every {code('*.json')} file
-          directly in the folder is read. Subfolders are ignored, so you can keep run artifacts there.
+          Then add the folder under <span className="font-medium text-foreground">Settings → Eval results folders</span>.
+          The app checks the folder and says how many result files it found. Every {code('*.json')} file directly in the
+          folder is read. Subfolders are ignored, so you can keep run artifacts there.
         </p>
-        <CodeBlock label="config.toml" text={CONFIG} />
+        <p>
+          Settings are saved to {code('~/.config/harness-report/settings.json')}. You can also write that file yourself, for
+          example on a CI machine:
+        </p>
+        <CodeBlock label="~/.config/harness-report/settings.json" text={SETTINGS_FILE} />
       </Section>
 
       <Section icon={FolderOpen} color="var(--agent-3)" title="Suite fields">

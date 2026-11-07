@@ -1,17 +1,19 @@
 import {useEffect, useState} from 'react'
 import type {SessionSummary} from '../shared/types.ts'
-import { Activity, CalendarDays, FlaskConical, LayoutDashboard, type LucideIcon } from 'lucide-react'
+import { Activity, CalendarDays, FlaskConical, LayoutDashboard, Settings, type LucideIcon } from 'lucide-react'
 import { formatDay } from '@/lib/format'
 import { groupByDay } from '@/lib/sessions'
 import EvalsScreen from './components/evals/EvalsScreen.tsx'
 import Overview from './components/Overview.tsx'
 import SessionRow from './components/SessionRow.tsx'
+import SettingsScreen from './components/settings/SettingsScreen.tsx'
 
-type View = 'overview' | 'evals'
+type View = 'overview' | 'evals' | 'settings'
 
 const VIEWS: { id: View; label: string; icon: LucideIcon; color: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'var(--agent-1)' },
   { id: 'evals', label: 'Evals', icon: FlaskConical, color: 'var(--agent-7)' },
+  { id: 'settings', label: 'Settings', icon: Settings, color: 'var(--agent-4)' },
 ]
 
 function App() {
@@ -40,8 +42,8 @@ function App() {
           <span className="flex size-7 items-center justify-center rounded-md bg-(--agent-1) text-white">
             <Activity className="size-4" />
           </span>
-          <h1 className="text-sm font-semibold tracking-tight">harness-report</h1>
-          <nav className="ml-2 flex items-center gap-1" aria-label="Sections">
+          <h1 className="text-sm font-semibold tracking-tight max-sm:sr-only">harness-report</h1>
+          <nav className="flex items-center gap-1 sm:ml-2" aria-label="Sections">
             {VIEWS.map(({ id, label, icon: Icon, color }) => (
               <button
                 key={id}
@@ -60,7 +62,8 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        {view === 'evals' && <EvalsScreen />}
+        {view === 'evals' && <EvalsScreen onOpenSettings={() => setView('settings')} />}
+        {view === 'settings' && <SettingsScreen />}
         {view === 'overview' && <Overview sessions={sessions} />}
 
         {/* Hidden, not removed, so open sessions stay open when you come back */}

@@ -144,3 +144,25 @@ export type EvalResults = {
     suites: EvalSuite[]
     rejected: RejectedEvalFile[]
 }
+
+// Settings the app can change. Paths are kept as typed, so ~ stays unexpanded.
+export type Settings = {
+  monthlyCredits: number
+  evalResults: string[]
+}
+
+// Where the settings were read from: the app's own settings.json, the hand-written config.toml, or nothing yet.
+export type SettingsSource = 'settings' | 'config.toml' | 'none'
+
+export type FolderCheck = {
+  path: string
+  found: boolean
+  resultFiles: number
+}
+
+export type SettingsResponse = {
+  settings: Settings
+  source: SettingsSource
+  file: string
+  folders: FolderCheck[]
+}

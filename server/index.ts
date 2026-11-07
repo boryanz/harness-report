@@ -1,7 +1,40 @@
 import {createServer} from 'node:http'
 import {loadCreditUsage,loadFindings,loadSessionDetail,loadSessions} from './adapters/copilot/loadSessions.ts'
-import {loadConfig} from './config.ts'
-import {loadEvals} from './evals/loadEvals.ts'
+import type {IncomingMessage, ServerResponse} from 'node:http'
+import type {SettingsResponse} from '../shared/types.ts'
+import {loadConfig, readSettings, saveSettings, SETTINGS_PATH, validateSettings} from './config.ts'
+import {checkFolders, loadEvals} from './evals/loadEvals.ts'
+import {isLocalRequest, readJsonBody} from './localOnly.ts'
+
+async function settingsResponse(): Promise<SettingsResponse> {
+    const {source, settings} = await readSettings()
+    return {
+        settings: {monthlyCredits: settings.monthlyCredits, evalResults: settings.evalResults},
+        source,
+        file: SETTINGS_PATH,
+        folders: await checkFolders(settings.evalResults),
+    }
+}
+
+function sendText(response: ServerResponse, status: number, text = '') {
+    response.writeHead(status, {'Content-Type': 'text/plain'})
+    response.end(text)
+}
+
+async function handleSettings(request: IncomingMessage, response: ServerResponse) {
+    if (request.method === 'PUT') {
+        if (!isLocalRequest(request)) return sendText(response, 403, 'Settings can only be changed from this computer')
+
+        const settings = validateSettings(await readJsonBody(request))
+        if (typeof settings === 'string') return sendText(response, 400, settings)
+        await saveSettings(settings)
+    } else if (request.method !== 'GET') {
+        return sendText(response, 405)
+    }
+
+    response.writeHead(200, {'Content-Type': 'application/json'})
+    response.end(JSON.stringify(await settingsResponse()))
+}
 
 
 const server = createServer(async (request, response) => {
@@ -39,6 +72,16 @@ const server = createServer(async (request, response) => {
         return
     }
 
+    if(request.url === '/api/settings') {
+        try {
+            await handleSettings(request, response)
+        } catch (error) {
+            console.error(error)
+            sendText(response, 500, "Settings couldn't be read or saved")
+        }
+        return
+    }
+
     if(request.url === '/api/findings') {
         try {
             const findings = await loadFindings()
@@ -66,6 +109,8 @@ const server = createServer(async (request, response) => {
     response.end()
 })
 
-server.listen(3001, '127.0.0.1', () => {
-    console.log('Server is running on http://127.0.0.1:3001')
+const PORT = Number(process.env.PORT) || 3001
+
+server.listen(PORT, '127.0.0.1', () => {
+    console.log(`Server is running on http://127.0.0.1:${PORT}`)
     })

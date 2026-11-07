@@ -26,11 +26,17 @@ Write a file like this into a results folder:
 }
 ```
 
-Then point harness-report at the folder in `~/.config/harness-report/config.toml`:
+Then add the folder in the app under **Settings → Eval results folders**. The app checks the folder and says how
+many result files it found.
 
-```toml
-[evals]
-results = "~/my-evals/results"       # or a list: ["~/my-evals/results", "~/team-evals/results"]
+Settings are saved to `~/.config/harness-report/settings.json`. You can also write that file yourself, for example on
+a CI machine:
+
+```json
+{
+  "monthly_credits": 30000,
+  "eval_results": ["~/my-evals/results", "~/team-evals/results"]
+}
 ```
 
 Every `*.json` file directly in the folder is read. Subfolders are ignored, so you can keep run artifacts there.
@@ -115,15 +121,8 @@ a metric id that isn't declared in `metrics` is also rejected, because that's al
 
 ## Starting a suite from the app
 
-The app starts a suite by running a command you declare, and it never builds a command from anything the browser
-sends. It shows the command's output and then reads the result files as usual, so your command only has to write a
-file that follows this contract.
-
-```toml
-[[evals.suites]]
-name = "my-skill"
-cwd = "~/my-evals"
-command = "./run-evals.sh --skill my-skill"
-```
+Not built yet. The plan: you declare the command for a suite in Settings, and the app runs it and never builds a
+command from anything the browser sends. It shows the command's output and then reads the result files as usual, so
+your command only has to write a file that follows this contract.
 
 Examples: [`fixtures/evals`](../fixtures/evals).

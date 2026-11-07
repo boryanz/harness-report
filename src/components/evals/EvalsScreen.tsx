@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, CircleSlash, Coins, FileWarning, FlaskConical, ListChecks, type LucideIcon } from 'lucide-react'
+import { BookOpen, CircleSlash, Coins, FileWarning, FlaskConical, ListChecks, Settings, type LucideIcon } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEvalResults } from '@/hooks/useEvalResults'
 import { armStats, groupBySubject } from '@/lib/evals'
@@ -23,7 +23,7 @@ function DocsLink({ onOpen }: { onOpen: () => void }) {
   )
 }
 
-function SetupHelp({ onOpenDocs }: { onOpenDocs: () => void }) {
+function SetupHelp({ onOpenDocs, onOpenSettings }: { onOpenDocs: () => void; onOpenSettings: () => void }) {
   return (
     <section className="rounded-lg border bg-card px-5 py-4 text-sm">
       <h2 className="flex items-center gap-1.5 font-semibold tracking-tight">
@@ -31,10 +31,17 @@ function SetupHelp({ onOpenDocs }: { onOpenDocs: () => void }) {
         No eval results yet
       </h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Point the app at a folder of result files in <code className="font-mono">~/.config/harness-report/config.toml</code>.
-        What to write in them is explained in <DocsLink onOpen={onOpenDocs} />.
+        Add the folder your eval tool writes result files into. What to write in them is explained in{' '}
+        <DocsLink onOpen={onOpenDocs} />.
       </p>
-      <pre className="mt-3 overflow-auto rounded-sm border bg-background p-3 font-mono text-xs">{`[evals]\nresults = "~/my-evals/results"`}</pre>
+      <button
+        type="button"
+        onClick={onOpenSettings}
+        className="mt-3 flex h-8 items-center gap-1.5 rounded-md bg-(--agent-1) px-3 text-xs font-medium text-white outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Settings className="size-3.5" aria-hidden />
+        Open Settings
+      </button>
     </section>
   )
 }
@@ -61,7 +68,7 @@ function RejectedFiles({ files, onOpenDocs }: { files: RejectedEvalFile[]; onOpe
   )
 }
 
-function EvalsScreen() {
+function EvalsScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const [page, setPage] = useState<Page>('results')
 
   return (
@@ -80,12 +87,12 @@ function EvalsScreen() {
           </button>
         ))}
       </nav>
-      {page === 'docs' ? <ContractGuide /> : <EvalResults onOpenDocs={() => setPage('docs')} />}
+      {page === 'docs' ? <ContractGuide /> : <EvalResults onOpenDocs={() => setPage('docs')} onOpenSettings={onOpenSettings} />}
     </div>
   )
 }
 
-function EvalResults({ onOpenDocs }: { onOpenDocs: () => void }) {
+function EvalResults({ onOpenDocs, onOpenSettings }: { onOpenDocs: () => void; onOpenSettings: () => void }) {
   const { results, failed } = useEvalResults()
 
   if (!results) {
@@ -107,7 +114,7 @@ function EvalResults({ onOpenDocs }: { onOpenDocs: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {subjects.length === 0 && results.rejected.length === 0 && <SetupHelp onOpenDocs={onOpenDocs} />}
+      {subjects.length === 0 && results.rejected.length === 0 && <SetupHelp onOpenDocs={onOpenDocs} onOpenSettings={onOpenSettings} />}
 
       {subjects.length > 0 && (
         <section className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border lg:grid-cols-4">
