@@ -84,72 +84,79 @@ function EvalCard({ evals }: { evals: SubjectEvals }) {
   const labels = Object.entries(latest?.labels ?? {})
 
   return (
-    <article className="overflow-hidden rounded-lg border bg-card">
-      <header className="px-5 py-4">
-        <h2 className="flex items-center gap-1.5 text-sm font-semibold tracking-tight">
-          <Icon className="size-3.5 shrink-0" style={{ color: subject.kind === 'agent' ? 'var(--agent-6)' : 'var(--agent-5)' }} aria-hidden />
-          <span className="min-w-0 wrap-anywhere">{subject.name}</span>
-          <span className="rounded-sm bg-muted px-1.5 py-px text-xs font-normal text-muted-foreground">{subject.kind}</span>
-        </h2>
-      </header>
+    <Collapsible defaultOpen asChild>
+      <article className="overflow-hidden rounded-lg border bg-card">
+        <header>
+          <h2 className="text-sm font-semibold tracking-tight">
+            <CollapsibleTrigger className="group flex w-full items-center gap-1.5 px-5 py-4 text-left outline-none transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+              <ChevronRight className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90 motion-reduce:transition-none" aria-hidden />
+              <Icon className="size-3.5 shrink-0" style={{ color: subject.kind === 'agent' ? 'var(--agent-6)' : 'var(--agent-5)' }} aria-hidden />
+              <span className="min-w-0 wrap-anywhere">{subject.name}</span>
+              <span className="rounded-sm bg-muted px-1.5 py-px text-xs font-normal text-muted-foreground">{subject.kind}</span>
+            </CollapsibleTrigger>
+          </h2>
+        </header>
 
-      {latest && stats && (
-        <Section
-          icon={Info}
-          color="var(--agent-1)"
-          title="Details"
-          summary={`${latest.subject.version.slice(0, 12)} · ${suiteTime(latest)}`}
-        >
-          <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-1 text-xs sm:gap-x-8">
-            <Detail icon={GitCommitHorizontal} color="var(--agent-1)" label="Version">
-              <span className="font-mono break-all">{latest.subject.version}</span>
-            </Detail>
-            {labels.map(([name, value]) => (
-              <Detail key={name} icon={Tag} color="var(--agent-4)" label={name}>
-                <span className="wrap-anywhere">{value}</span>
-              </Detail>
-            ))}
-            <Detail icon={CalendarClock} color="var(--agent-7)" label={latest.finished ? 'Finished' : 'Started'}>
-              {suiteTime(latest)}
-            </Detail>
-            <Detail icon={ListChecks} color="var(--agent-3)" label="Runs">
-              <span className="tabular-nums">
-                {stats.ok} scored
-                {leftOut > 0 && <span className="text-muted-foreground">, {leftOut} left out</span>}
-              </span>
-            </Detail>
-          </dl>
-        </Section>
-      )}
-
-      {running && <Running suite={running} />}
-
-      {latest && (
-        <>
-          <div className="border-t px-5 py-2">
-            <ScoreTable suite={latest} />
-          </div>
-          <Section
-            icon={ListChecks}
-            color="var(--agent-3)"
-            title="Cases"
-            summary={`${new Set(latest.runs.map((run) => run.case)).size} cases`}
-          >
-            <CaseTable suite={latest} />
-          </Section>
-          {leftOut > 0 && (
-            <Section icon={CircleSlash} color="var(--waiting)" title="Runs left out" summary={`${leftOut} of ${latest.runs.length}`}>
-              <LeftOutList suite={latest} />
+        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down motion-reduce:animate-none">
+          {latest && stats && (
+            <Section
+              icon={Info}
+              color="var(--agent-1)"
+              title="Details"
+              summary={`${latest.subject.version.slice(0, 12)} · ${suiteTime(latest)}`}
+            >
+              <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-1 text-xs sm:gap-x-8">
+                <Detail icon={GitCommitHorizontal} color="var(--agent-1)" label="Version">
+                  <span className="font-mono break-all">{latest.subject.version}</span>
+                </Detail>
+                {labels.map(([name, value]) => (
+                  <Detail key={name} icon={Tag} color="var(--agent-4)" label={name}>
+                    <span className="wrap-anywhere">{value}</span>
+                  </Detail>
+                ))}
+                <Detail icon={CalendarClock} color="var(--agent-7)" label={latest.finished ? 'Finished' : 'Started'}>
+                  {suiteTime(latest)}
+                </Detail>
+                <Detail icon={ListChecks} color="var(--agent-3)" label="Runs">
+                  <span className="tabular-nums">
+                    {stats.ok} scored
+                    {leftOut > 0 && <span className="text-muted-foreground">, {leftOut} left out</span>}
+                  </span>
+                </Detail>
+              </dl>
             </Section>
           )}
-          {history.length > 1 && (
-            <Section icon={History} color="var(--agent-1)" title="Versions" summary={`${history.length} versions`}>
-              <VersionTable history={history} />
-            </Section>
+
+          {running && <Running suite={running} />}
+
+          {latest && (
+            <>
+              <div className="border-t px-5 py-2">
+                <ScoreTable suite={latest} />
+              </div>
+              <Section
+                icon={ListChecks}
+                color="var(--agent-3)"
+                title="Cases"
+                summary={`${new Set(latest.runs.map((run) => run.case)).size} cases`}
+              >
+                <CaseTable suite={latest} />
+              </Section>
+              {leftOut > 0 && (
+                <Section icon={CircleSlash} color="var(--waiting)" title="Runs left out" summary={`${leftOut} of ${latest.runs.length}`}>
+                  <LeftOutList suite={latest} />
+                </Section>
+              )}
+              {history.length > 1 && (
+                <Section icon={History} color="var(--agent-1)" title="Versions" summary={`${history.length} versions`}>
+                  <VersionTable history={history} />
+                </Section>
+              )}
+            </>
           )}
-        </>
-      )}
-    </article>
+        </CollapsibleContent>
+      </article>
+    </Collapsible>
   )
 }
 

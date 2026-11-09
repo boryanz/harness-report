@@ -121,12 +121,12 @@ export type Difference = {
 export function compareScores(score: number | null, baseline: number | null, metric: EvalMetric, margin: number): Difference | null {
   if (score === null || baseline === null) return null
 
-  const delta = score - baseline
-  const withinNoise = margin > 0 && Math.abs(delta) <= margin
-  const sign = delta > 0 ? '+' : ''
-  const text = metric.unit === 'percent' ? `${sign}${Math.round(delta * 100)} pts` : `${sign}${delta.toFixed(1)}`
+  // Gain towards the better direction: positive always means the arm beat the baseline.
+  const gain = metric.better === 'lower' ? baseline - score : score - baseline
+  const withinNoise = margin > 0 && Math.abs(gain) <= margin
+  const sign = gain > 0 ? '+' : ''
+  const text = metric.unit === 'percent' ? `${sign}${Math.round(gain * 100)} pts` : `${sign}${gain.toFixed(1)}`
 
-  if (delta === 0 || withinNoise) return { text, verdict: 'same', withinNoise }
-  const improved = metric.better === 'higher' ? delta > 0 : delta < 0
-  return { text, verdict: improved ? 'better' : 'worse', withinNoise }
+  if (gain === 0 || withinNoise) return { text, verdict: 'same', withinNoise }
+  return { text, verdict: gain > 0 ? 'better' : 'worse', withinNoise }
 }
