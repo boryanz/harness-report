@@ -114,7 +114,8 @@ const GLOSSARY: [string, string][] = [
   ['Run', 'One attempt at a case. A case is usually run several times.'],
   ['Metric', 'Something scored on each run, such as "tests passed". Every metric is shown separately.'],
   ['Arm', 'One setup being compared, such as with-skill and baseline (without it).'],
-  ['Difference', 'How far an arm is from the baseline. Green is better, red is worse.'],
+  ['Difference', 'The gain over the baseline. + is better (green) and − is worse (red), even for lower-is-better metrics.'],
+  ['Removed', 'The skill or agent is no longer installed in ~/.copilot. Its card moves to the end.'],
   ['Within noise', 'The difference is smaller than the scores move between identical runs, so it may be luck.'],
   ['Left out', "Runs that broke or couldn't be judged. They don't count toward scores."],
   ['Version', 'A change to the skill or agent. Older versions stay listed so you can see progress.'],
@@ -181,7 +182,7 @@ function FieldTable({ fields }: { fields: Field[] }) {
   )
 }
 
-function Section({ icon: Icon, color, title, children }: { icon: typeof BookOpen; color: string; title: string; children: ReactNode }) {
+export function Section({ icon: Icon, color, title, children }: { icon: typeof BookOpen; color: string; title: string; children: ReactNode }) {
   return (
     <section className="rounded-lg border bg-card px-5 py-4">
       <h2 className="flex items-center gap-1.5 text-sm font-semibold tracking-tight">

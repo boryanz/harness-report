@@ -8,6 +8,8 @@ export type SessionStatus = 'stuck' | 'degraded' | 'healthy'
 
 export type SessionSummary = {
     id: string
+    // Where the session was recorded: 'local' for ~/.copilot, otherwise the sandbox or eval suite name
+    source: string
     name: string
     cwd: string
     start: string
@@ -143,6 +145,8 @@ export type RejectedEvalFile = {
 export type EvalResults = {
     suites: EvalSuite[]
     rejected: RejectedEvalFile[]
+    // "kind:name" keys of subjects no longer installed in ~/.copilot
+    removed: string[]
 }
 
 // Settings the app can change. Paths are kept as typed, so ~ stays unexpanded.

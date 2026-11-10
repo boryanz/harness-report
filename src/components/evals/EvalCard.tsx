@@ -75,7 +75,7 @@ function Running({ suite }: { suite: EvalSuite }) {
   )
 }
 
-function EvalCard({ evals }: { evals: SubjectEvals }) {
+function EvalCard({ evals, removed }: { evals: SubjectEvals; removed: boolean }) {
   const { subject, history, running } = evals
   const latest = history[history.length - 1]
   const Icon = subject.kind === 'agent' ? Bot : Sparkles
@@ -84,7 +84,7 @@ function EvalCard({ evals }: { evals: SubjectEvals }) {
   const labels = Object.entries(latest?.labels ?? {})
 
   return (
-    <Collapsible defaultOpen asChild>
+    <Collapsible asChild>
       <article className="overflow-hidden rounded-lg border bg-card">
         <header>
           <h2 className="text-sm font-semibold tracking-tight">
@@ -93,6 +93,9 @@ function EvalCard({ evals }: { evals: SubjectEvals }) {
               <Icon className="size-3.5 shrink-0" style={{ color: subject.kind === 'agent' ? 'var(--agent-6)' : 'var(--agent-5)' }} aria-hidden />
               <span className="min-w-0 wrap-anywhere">{subject.name}</span>
               <span className="rounded-sm bg-muted px-1.5 py-px text-xs font-normal text-muted-foreground">{subject.kind}</span>
+              {removed && (
+                <span className="rounded-sm bg-destructive px-1.5 py-px text-xs font-semibold text-white">removed</span>
+              )}
             </CollapsibleTrigger>
           </h2>
         </header>

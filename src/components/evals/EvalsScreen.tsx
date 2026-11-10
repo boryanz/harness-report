@@ -1,19 +1,10 @@
-import { useState } from 'react'
-import { BookOpen, CircleSlash, Coins, FileWarning, FlaskConical, ListChecks, Settings, type LucideIcon } from 'lucide-react'
+import { CircleSlash, Coins, FileWarning, FlaskConical, ListChecks, Settings } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEvalResults } from '@/hooks/useEvalResults'
 import { armStats, groupBySubject } from '@/lib/evals'
 import type { EvalRun, RejectedEvalFile } from '../../../shared/types.ts'
 import Tile from '../Tile.tsx'
-import ContractGuide from './ContractGuide.tsx'
 import EvalCard from './EvalCard.tsx'
-
-type Page = 'results' | 'docs'
-
-const PAGES: { id: Page; label: string; icon: LucideIcon; color: string }[] = [
-  { id: 'results', label: 'Results', icon: ListChecks, color: 'var(--agent-3)' },
-  { id: 'docs', label: 'Docs', icon: BookOpen, color: 'var(--agent-7)' },
-]
 
 function DocsLink({ onOpen }: { onOpen: () => void }) {
   return (
@@ -68,31 +59,7 @@ function RejectedFiles({ files, onOpenDocs }: { files: RejectedEvalFile[]; onOpe
   )
 }
 
-function EvalsScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
-  const [page, setPage] = useState<Page>('results')
-
-  return (
-    <div className="flex flex-col gap-4">
-      <nav className="flex items-center gap-1 self-start rounded-md border bg-card p-0.5" aria-label="Evals pages">
-        {PAGES.map(({ id, label, icon: Icon, color }) => (
-          <button
-            key={id}
-            type="button"
-            aria-current={page === id ? 'page' : undefined}
-            className="flex items-center gap-1.5 rounded-sm px-2 py-1 text-xs text-muted-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground"
-            onClick={() => setPage(id)}
-          >
-            <Icon className="size-3.5" style={{ color }} aria-hidden />
-            {label}
-          </button>
-        ))}
-      </nav>
-      {page === 'docs' ? <ContractGuide /> : <EvalResults onOpenDocs={() => setPage('docs')} onOpenSettings={onOpenSettings} />}
-    </div>
-  )
-}
-
-function EvalResults({ onOpenDocs, onOpenSettings }: { onOpenDocs: () => void; onOpenSettings: () => void }) {
+function EvalsScreen({ onOpenDocs, onOpenSettings }: { onOpenDocs: () => void; onOpenSettings: () => void }) {
   const { results, failed } = useEvalResults()
 
   if (!results) {
@@ -106,7 +73,9 @@ function EvalResults({ onOpenDocs, onOpenSettings }: { onOpenDocs: () => void; o
     )
   }
 
-  const subjects = groupBySubject(results.suites)
+  const isRemoved = (key: string) => results.removed.includes(key)
+  // Removed skills and agents go last; sort is stable, so each group keeps its order.
+  const subjects = groupBySubject(results.suites).sort((a, b) => Number(isRemoved(a.key)) - Number(isRemoved(b.key)))
   const scored = subjects.filter((subject) => subject.history.length > 0)
   const latestRuns: EvalRun[] = scored.flatMap((subject) => subject.history[subject.history.length - 1].runs)
   const stats = armStats(latestRuns)
@@ -125,7 +94,9 @@ function EvalResults({ onOpenDocs, onOpenSettings }: { onOpenDocs: () => void; o
         </section>
       )}
 
-      {subjects.map((subject) => <EvalCard key={subject.key} evals={subject} />)}
+      {subjects.map((subject) => (
+        <EvalCard key={subject.key} evals={subject} removed={isRemoved(subject.key)} />
+      ))}
 
       {results.rejected.length > 0 && <RejectedFiles files={results.rejected} onOpenDocs={onOpenDocs} />}
     </div>

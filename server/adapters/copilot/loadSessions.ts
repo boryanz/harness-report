@@ -14,6 +14,35 @@ import {parseToolCalls, parseToolRecords} from './tools.ts'
 
 const SESSIONS_ROOT = join(homedir(), '.copilot', 'session-state')
 
+type SessionFolder = {id: string; folder: string; source: string}
+
+async function foldersIn(sessionState: string, source: string): Promise<SessionFolder[]> {
+    if (!existsSync(sessionState)) return []
+    const entries = await readdir(sessionState, {withFileTypes: true})
+    return entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => ({id: entry.name, folder: join(sessionState, entry.name), source}))
+}
+
+// The one place that knows where sessions live: ~/.copilot, then every <root>/<source>/session-state from config.
+// Sandboxes and eval suites each keep their own Copilot home, so the folder name under the root is the source.
+async function sessionFolders(): Promise<SessionFolder[]> {
+    const config = await loadConfig()
+    const extra = await Promise.all(config.sessionRoots.map(async (root) => {
+        if (!existsSync(root)) return []
+        const sources = await readdir(root, {withFileTypes: true})
+        const nested = await Promise.all(sources
+            .filter((source) => source.isDirectory())
+            .map((source) => foldersIn(join(root, source.name, 'session-state'), source.name)))
+        return nested.flat()
+    }))
+    return [...await foldersIn(SESSIONS_ROOT, 'local'), ...extra.flat()]
+}
+
+async function findFolder(id: string): Promise<SessionFolder | undefined> {
+    return (await sessionFolders()).find((entry) => entry.id === id)
+}
+
 function parseWorkspace(text: string): Record<string, string> {
     const meta: Record<string, string> = {}
     for (const line of text.split('\n')) {
@@ -26,8 +55,7 @@ function parseWorkspace(text: string): Record<string, string> {
     return meta
 }
 
-async function readSession(id: string): Promise<SessionSummary  | null> {
-    const folder = join(SESSIONS_ROOT, id)
+async function readSession({id, folder, source}: SessionFolder): Promise<SessionSummary  | null> {
     const eventsPath = join(folder, 'events.jsonl')
     if (!existsSync(eventsPath)) return null
 
@@ -44,6 +72,7 @@ async function readSession(id: string): Promise<SessionSummary  | null> {
     const findings = runChecks([{id, name, end, agents, tools: parseToolRecords(events)}])
     return {
         id,
+        source,
         name,
         cwd: meta['cwd'] || '',
         start: new Date(Math.min(...times)).toISOString(),
@@ -54,15 +83,16 @@ async function readSession(id: string): Promise<SessionSummary  | null> {
 }
 
 export async function loadSessions(): Promise<SessionSummary[]> {
-    const entries = await readdir(SESSIONS_ROOT, {withFileTypes: true})
-    const folders = entries.filter((entry) => entry.isDirectory())
-    const sessions = await Promise.all(folders.map((folder) => readSession(folder.name)))
+    const folders = await sessionFolders()
+    const sessions = await Promise.all(folders.map(readSession))
     const cutOff = monthStart()
     return sessions.filter((session) => session !== null).filter((session) => Date.parse(session!.end) >= cutOff)
 }
 
 export async function loadSessionDetail(id: string): Promise<SessionDetail | null> {
-    const path = join(SESSIONS_ROOT, id, 'events.jsonl')
+    const entry = await findFolder(id)
+    if (!entry) return null
+    const path = join(entry.folder, 'events.jsonl')
     if (!existsSync(path)) return null
 
     const events = await readEvents(path)
@@ -76,9 +106,10 @@ export async function loadSessionDetail(id: string): Promise<SessionDetail | nul
 }
 
 export async function loadFindings(): Promise<Finding[]> {
+    const folders = new Map((await sessionFolders()).map((entry) => [entry.id, entry.folder]))
     const sessions = await loadSessions()
     const checkSessions = await Promise.all(sessions.map(async (session) => {
-        const events = await readEvents(join(SESSIONS_ROOT, session.id, 'events.jsonl'))
+        const events = await readEvents(join(folders.get(session.id)!, 'events.jsonl'))
         return {
             id: session.id,
             name: session.name || session.id,
@@ -90,32 +121,15 @@ export async function loadFindings(): Promise<Finding[]> {
     return runChecks(checkSessions)
 }
 
-// Each eval suite is its own Copilot home: <evals>/<suite>/session-state/<id>/events.jsonl
-async function evalEventFiles(root: string): Promise<string[]> {
-    if (!existsSync(root)) return []
-
-    const suites = await readdir(root, {withFileTypes: true})
-    const folders = await Promise.all(suites.filter((suite) => suite.isDirectory()).map(async (suite) => {
-        const sessionState = join(root, suite.name, 'session-state')
-        if (!existsSync(sessionState)) return []
-        const ids = await readdir(sessionState)
-        return ids.map((id) => join(sessionState, id, 'events.jsonl'))
-    }))
-    return folders.flat().filter((path) => existsSync(path))
-}
-
-// Eval runs aren't listed as sessions, but they spend from the same allowance.
+// Every session, local, sandbox and eval, spends from the same allowance, and they're all in loadSessions now.
 export async function loadCreditUsage(): Promise<CreditUsage> {
     const config = await loadConfig()
     const sessions = await loadSessions()
-    const evalFiles = config.evalSessions ? await evalEventFiles(config.evalSessions) : []
-    const evals = await Promise.all(evalFiles.map(async (path) => parseCredits(await readEvents(path), monthStart())))
-    const spend = [...sessions, ...evals]
 
     return {
         allowance: config.monthlyCredits,
-        used: spend.reduce((total, item) => total + item.monthCredits, 0),
-        premiumRequests: spend.reduce((total, item) => total + item.monthPremiumRequests, 0)
+        used: sessions.reduce((total, item) => total + item.monthCredits, 0),
+        premiumRequests: sessions.reduce((total, item) => total + item.monthPremiumRequests, 0)
     }
 }
 

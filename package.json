@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "node --watch server/index.ts",
+    "sync:sbx": "mkdir -p ~/.copilot-sbx/ccm && sbx cp ccm:/home/agent/.copilot/session-state ~/.copilot-sbx/ccm/",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",

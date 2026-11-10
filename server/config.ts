@@ -10,10 +10,13 @@ import type {Settings, SettingsSource} from '../shared/types.ts'
 const CONFIG_PATH = process.env.HARNESS_REPORT_CONFIG || join(homedir(), '.config', 'harness-report', 'config.toml')
 export const SETTINGS_PATH = join(dirname(CONFIG_PATH), 'settings.json')
 const DEFAULT_EVAL_SESSIONS = '~/.copilot-evals'
+// Sessions copied out of sandboxes: <root>/<sandbox>/session-state/<id>/events.jsonl
+const DEFAULT_SANDBOX_SESSIONS = ['~/.copilot-sbx']
 
 type TomlConfig = {
     report?: {monthly_credits?: number}
     evals?: {results?: string | string[]; sessions?: string}
+    sessions?: {sandboxes?: string | string[]}
 }
 
 // What settings.json holds. Paths are kept as typed, with ~ unexpanded, so the file stays portable.
@@ -21,14 +24,16 @@ type SavedSettings = {
     monthly_credits?: number
     eval_results?: string[]
     eval_sessions?: string
+    sandbox_sessions?: string[]
 }
 
-type StoredSettings = Settings & {evalSessions: string | undefined}
+type StoredSettings = Settings & {evalSessions: string | undefined; sandboxSessions: string[] | undefined}
 
 export type Config = {
     monthlyCredits: number
     evalResults: string[]
-    evalSessions: string | null
+    // Extra folders laid out as <root>/<source>/session-state/<id>, listed alongside ~/.copilot sessions
+    sessionRoots: string[]
 }
 
 export function expandHome(path: string): string {
@@ -48,6 +53,7 @@ export async function readSettings(): Promise<{source: SettingsSource; settings:
                 monthlyCredits: Number(saved.monthly_credits ?? 0) || 0,
                 evalResults: stringList(saved.eval_results),
                 evalSessions: typeof saved.eval_sessions === 'string' ? saved.eval_sessions : undefined,
+                sandboxSessions: saved.sandbox_sessions === undefined ? undefined : stringList(saved.sandbox_sessions),
             },
         }
     }
@@ -60,21 +66,24 @@ export async function readSettings(): Promise<{source: SettingsSource; settings:
                 monthlyCredits: Number(toml.report?.monthly_credits ?? 0) || 0,
                 evalResults: stringList(toml.evals?.results),
                 evalSessions: toml.evals?.sessions,
+                sandboxSessions: toml.sessions?.sandboxes === undefined ? undefined : stringList(toml.sessions.sandboxes),
             },
         }
     }
 
-    return {source: 'none', settings: {monthlyCredits: 0, evalResults: [], evalSessions: undefined}}
+    return {source: 'none', settings: {monthlyCredits: 0, evalResults: [], evalSessions: undefined, sandboxSessions: undefined}}
 }
 
 // Read on every request, so a save applies without a restart. No settings means no allowance and no evals.
 export async function loadConfig(): Promise<Config> {
     const {settings} = await readSettings()
     const evalResults = settings.evalResults.map(expandHome)
+    const sandboxes = settings.sandboxSessions ?? DEFAULT_SANDBOX_SESSIONS
+    const evals = evalResults.length > 0 ? [settings.evalSessions ?? DEFAULT_EVAL_SESSIONS] : []
     return {
         monthlyCredits: settings.monthlyCredits,
         evalResults,
-        evalSessions: evalResults.length > 0 ? expandHome(settings.evalSessions ?? DEFAULT_EVAL_SESSIONS) : null,
+        sessionRoots: [...new Set([...sandboxes, ...evals].map(expandHome))],
     }
 }
 
@@ -105,6 +114,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
         monthly_credits: settings.monthlyCredits,
         eval_results: settings.evalResults,
         eval_sessions: current.evalSessions,
+        sandbox_sessions: current.sandboxSessions,
     }
 
     await mkdir(dirname(SETTINGS_PATH), {recursive: true})

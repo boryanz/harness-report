@@ -2,6 +2,7 @@ import {readdir, readFile, stat} from 'node:fs/promises'
 import {join} from 'node:path'
 import type {EvalResults, FolderCheck} from '../../shared/types.ts'
 import {expandHome} from '../config.ts'
+import {isInstalled} from './installed.ts'
 import {validateSuite, type Parsed} from './validateSuite.ts'
 
 function parseSuite(text: string): Parsed {
@@ -43,7 +44,7 @@ export async function checkFolders(folders: string[]): Promise<FolderCheck[]> {
 
 // One bad file is reported, and never stops the others from loading. Suites come back oldest first.
 export async function loadEvals(folders: string[]): Promise<EvalResults> {
-    const results: EvalResults = {suites: [], rejected: []}
+    const results: EvalResults = {suites: [], rejected: [], removed: []}
 
     for (const folder of folders) {
         for (const name of (await resultFiles(folder)) ?? []) {
@@ -54,5 +55,9 @@ export async function loadEvals(folders: string[]): Promise<EvalResults> {
     }
 
     results.suites.sort((a, b) => Date.parse(a.started) - Date.parse(b.started))
+
+    // Checked on every load, so deleting or restoring a skill shows on the next refresh.
+    const subjects = new Map(results.suites.map((suite) => [`${suite.subject.kind}:${suite.subject.name}`, suite.subject]))
+    results.removed = [...subjects].filter(([, subject]) => !isInstalled(subject)).map(([key]) => key)
     return results
 }

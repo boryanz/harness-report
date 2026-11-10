@@ -1,18 +1,20 @@
 import {useEffect, useState} from 'react'
 import type {SessionSummary} from '../shared/types.ts'
-import { Activity, CalendarDays, FlaskConical, LayoutDashboard, Settings, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpen, CalendarDays, FlaskConical, LayoutDashboard, Settings, type LucideIcon } from 'lucide-react'
 import { formatDay } from '@/lib/format'
 import { groupByDay } from '@/lib/sessions'
+import DocsScreen from './components/docs/DocsScreen.tsx'
 import EvalsScreen from './components/evals/EvalsScreen.tsx'
 import Overview from './components/Overview.tsx'
 import SessionRow from './components/SessionRow.tsx'
 import SettingsScreen from './components/settings/SettingsScreen.tsx'
 
-type View = 'overview' | 'evals' | 'settings'
+type View = 'overview' | 'evals' | 'docs' | 'settings'
 
 const VIEWS: { id: View; label: string; icon: LucideIcon; color: string }[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'var(--agent-1)' },
+  { id: 'overview', label: 'Observability', icon: LayoutDashboard, color: 'var(--agent-1)' },
   { id: 'evals', label: 'Evals', icon: FlaskConical, color: 'var(--agent-7)' },
+  { id: 'docs', label: 'Docs', icon: BookOpen, color: 'var(--agent-3)' },
   { id: 'settings', label: 'Settings', icon: Settings, color: 'var(--agent-4)' },
 ]
 
@@ -62,7 +64,8 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        {view === 'evals' && <EvalsScreen onOpenSettings={() => setView('settings')} />}
+        {view === 'evals' && <EvalsScreen onOpenDocs={() => setView('docs')} onOpenSettings={() => setView('settings')} />}
+        {view === 'docs' && <DocsScreen />}
         {view === 'settings' && <SettingsScreen />}
         {view === 'overview' && <Overview sessions={sessions} />}
 
