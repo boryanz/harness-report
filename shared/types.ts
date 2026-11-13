@@ -153,6 +153,10 @@ export type EvalResults = {
 export type Settings = {
   monthlyCredits: number
   evalResults: string[]
+  // Where sandbox sessions are copied to. Empty means the default, ~/.copilot-sbx
+  sandboxFolder: string
+  // Sandbox names to copy sessions from when the server starts or settings are saved
+  sandboxes: string[]
 }
 
 // Where the settings were read from: the app's own settings.json, the hand-written config.toml, or nothing yet.

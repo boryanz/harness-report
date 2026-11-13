@@ -1,25 +1,30 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { CircleCheck, CircleAlert, Coins, FileCog, FolderOpen, Plus, Save, X } from 'lucide-react'
+import { Box, CircleCheck, CircleAlert, Coins, FileCog, FolderOpen, Plus, Save, X } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { FolderCheck, SettingsResponse } from '../../../shared/types.ts'
+import type { FolderCheck, Settings, SettingsResponse } from '../../../shared/types.ts'
 
 const INPUT =
   'h-8 w-full min-w-0 rounded-md border bg-background px-2.5 font-mono text-xs outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-(--waiting)'
 
-type Draft = { credits: string; folders: string[] }
+type Draft = { credits: string; folders: string[]; sandboxFolder: string; sandboxes: string }
 
 function toDraft(saved: SettingsResponse): Draft {
   return {
     credits: saved.settings.monthlyCredits ? String(saved.settings.monthlyCredits) : '',
     folders: saved.settings.evalResults.length > 0 ? saved.settings.evalResults : [''],
+    sandboxFolder: saved.settings.sandboxFolder,
+    sandboxes: saved.settings.sandboxes.join(', '),
   }
 }
 
 // What would be sent: blank rows dropped, so an empty extra row doesn't count as a change.
-function toSettings(draft: Draft) {
+// Same key order as the server's settings, so the JSON comparison below works.
+function toSettings(draft: Draft): Settings {
   return {
     monthlyCredits: draft.credits.trim() === '' ? 0 : Number(draft.credits.replaceAll(/[\s,_]/g, '')),
     evalResults: draft.folders.map((folder) => folder.trim()).filter(Boolean),
+    sandboxFolder: draft.sandboxFolder.trim(),
+    sandboxes: [...new Set(draft.sandboxes.split(/[\s,]+/).filter(Boolean))],
   }
 }
 
@@ -200,6 +205,40 @@ function SettingsScreen() {
           <Plus className="size-3.5" style={{ color: 'var(--agent-7)' }} aria-hidden />
           Add folder
         </button>
+      </Section>
+
+      <Section
+        icon={Box}
+        color="var(--agent-5)"
+        title="Sandboxes"
+        description="Sessions are copied out of these sandboxes when the server starts and when you save here, then listed with your local sessions."
+      >
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+            Sandbox names, separated by commas
+            <input
+              className={INPUT}
+              value={current.sandboxes}
+              placeholder="ccm"
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              onChange={(event) => update({ sandboxes: event.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+            Copy sessions into (leave empty for ~/.copilot-sbx)
+            <input
+              className={INPUT}
+              value={current.sandboxFolder}
+              placeholder="~/.copilot-sbx"
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              onChange={(event) => update({ sandboxFolder: event.target.value })}
+            />
+          </label>
+        </div>
       </Section>
 
       <Section

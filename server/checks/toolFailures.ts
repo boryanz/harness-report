@@ -1,5 +1,6 @@
 import type {Finding} from '../../shared/types.ts'
 import type {CheckSession, ToolRecord} from '../model.ts'
+import {errorCause} from './hints.ts'
 import {agentLabel, finding, normalise, shorten} from './shared.ts'
 import {failureStreaks} from './stuckLoops.ts'
 
@@ -15,7 +16,12 @@ export function checkToolFailures(session: CheckSession): Finding[] {
         groups.set(key, [...(groups.get(key) ?? []), tool])
     }
 
-    return [...groups.values()].map((hits) => {
+    // A one-off environment failure (sandbox crash, MCP timeout) is usually worked around, so it only
+    // counts once it keeps happening. A run of them in a row is still caught as a stuck loop.
+    const worthReporting = (hits: ToolRecord[]) =>
+        errorCause([hits[0].message]) !== 'environment' || hits.length >= MEDIUM_FROM
+
+    return [...groups.values()].filter(worthReporting).map((hits) => {
         const first = hits[0]
         const latest = hits[hits.length - 1]
         return finding(session, {
